@@ -1,23 +1,55 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 from typing import List, Optional
 from datetime import datetime
-from .models import StatusPedido
+from models import StatusPedido
 
-class UsuarioBase(BaseModel):
-    nome: str
+class UserBase(BaseModel):
     email: EmailStr
-    telefone: str
+    full_name: str
 
-class UsuarioCreate(UsuarioBase):
-    senha: str
+class UserCreate(UserBase):
+    password: str
 
-class Usuario(UsuarioBase):
+class User(UserBase):
     id: int
-    is_admin: bool
-    data_criacao: datetime
+    is_active: bool = True
 
     class Config:
-        orm_mode = True
+        from_attributes = True
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+class TokenData(BaseModel):
+    email: Optional[str] = None
+
+class EmpresaBase(BaseModel):
+    nome: str
+    slug: constr(pattern=r'^[a-z0-9]+(?:-[a-z0-9]+)*$')
+    cnpj: constr(pattern=r'^\d{14}$')
+    endereco: str
+    cidade: str
+    estado: constr(pattern=r'^[A-Z]{2}$')
+    cep: constr(pattern=r'^\d{8}$')
+    telefone: constr(pattern=r'^\d{10,11}$')
+    logo_url: Optional[str] = None
+
+class EmpresaCreate(EmpresaBase):
+    pass
+
+class Empresa(EmpresaBase):
+    id: int
+    usuario_id: int
+    data_criacao: datetime
+    ativo: bool = True
+
+    class Config:
+        from_attributes = True
 
 class ProdutoBase(BaseModel):
     nome: str
@@ -31,12 +63,13 @@ class ProdutoCreate(ProdutoBase):
 
 class Produto(ProdutoBase):
     id: int
+    empresa_id: int
     ativo: bool
     data_criacao: datetime
     data_atualizacao: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ItemPedidoBase(BaseModel):
     produto_id: int
@@ -51,21 +84,20 @@ class ItemPedido(ItemPedidoBase):
     pedido_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PedidoBase(BaseModel):
-    usuario_id: int
     valor_total: float
 
-class PedidoCreate(PedidoBase):
+class PedidoCreate(BaseModel):
     itens: List[ItemPedidoCreate]
 
 class Pedido(PedidoBase):
     id: int
     status: StatusPedido
-    data_pedido: datetime
-    data_atualizacao: datetime
+    data_criacao: datetime
+    empresa_id: int
     itens: List[ItemPedido]
 
     class Config:
-        orm_mode = True
+        from_attributes = True

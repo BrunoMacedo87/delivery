@@ -1,11 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from ..database import get_db
-from ..schemas import Pedido, PedidoCreate
-from ..models import Pedido as PedidoModel, ItemPedido, Produto
-from ..auth import get_current_user
-from ..whatsapp import EvolutionWhatsAppAPI
+import sys
+import os
+
+# Adiciona o diretório pai ao PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database import get_db
+from schemas import PedidoCreate, Pedido
+from models import Pedido as PedidoModel, ItemPedido, Produto, User
+from auth import get_current_user
+from whatsapp import EvolutionWhatsAppAPI
 
 router = APIRouter(prefix="/pedidos", tags=["pedidos"])
 whatsapp = EvolutionWhatsAppAPI()

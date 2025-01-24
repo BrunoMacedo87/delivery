@@ -1,10 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from ..database import get_db
-from ..schemas import Produto, ProdutoCreate
-from ..models import Produto as ProdutoModel
-from ..auth import get_current_user
+import sys
+import os
+
+# Adiciona o diretório pai ao PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database import get_db
+from schemas import ProdutoCreate, Produto
+from models import Produto as ProdutoModel
+from auth import get_current_user
 
 router = APIRouter(prefix="/produtos", tags=["produtos"])
 

@@ -1,13 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
-from typing import Dict
-from ..database import get_db
-from ..auth import get_current_user
+from typing import Dict, List
+import sys
+import os
 import dns.resolver
 import subprocess
-import os
 import asyncio
 from datetime import datetime
+
+# Adiciona o diretório pai ao PYTHONPATH
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from database import get_db
+from auth import get_current_user
+from models import StatusPedido
 
 router = APIRouter(prefix="/dominios", tags=["dominios"])
 

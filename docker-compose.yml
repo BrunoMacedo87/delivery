@@ -1,75 +1,54 @@
 version: '3.8'
 
 services:
-  backend:
-    build: ./backend
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://user:password@db:5432/dbname
-    depends_on:
-      - db
-    volumes:
-      - ./backend:/app
-    networks:
-      - app-network
-
-  frontend:
-    build: ./frontend
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    ports:
-      - "3000:3000"
-    depends_on:
-      - backend
-    networks:
-      - app-network
-
   db:
     image: postgres:13
     environment:
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=dbname
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: testenota
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations:/docker-entrypoint-initdb.d
     ports:
       - "5432:5432"
     networks:
       - app-network
 
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
+  backend:
+    build: ./backend
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./frontend/build:/usr/share/nginx/html
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/logs:/var/log/letsencrypt
+      - ./backend:/app
+      - ./backend/uploads:/app/uploads
+    ports:
+      - "8000:8000"
     depends_on:
-      - backend
-      - frontend
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db/testenota
     networks:
       - app-network
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    command: uvicorn main:app --host 0.0.0.0 --reload
 
-  certbot:
-    image: certbot/certbot
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     volumes:
-      - ./certbot/conf:/etc/letsencrypt
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/logs:/var/log/letsencrypt
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - WATCHPACK_POLLING=true
     depends_on:
-      - nginx
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+      - backend
+    networks:
+      - app-network
 
 volumes:
   postgres_data:
-  certbot_data:
 
 networks:
   app-network:

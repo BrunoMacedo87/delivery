@@ -8,7 +8,7 @@ load_dotenv()
 
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://user:password@localhost/dbname"
+    "postgresql://postgres:postgres@db:5432/testenota"
 )
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
